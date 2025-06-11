@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetSpeed Test</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    :root {
+      --primary: #0d1b2a;
+      --secondary: #1a2a3e;
+      --accent-border: #00d4ff;
+      --needle-color: #ff0077;
+      --speed-value-color: #00ffcc;
+      --button-bg: #007bff;
+      --button-hover-bg: #0056b3;
+      --text-color: #f0f0f0;
+      --info-bg: #16213e;
+      --info-border: #00d4ff;
+      --info-shadow: 0 4px 24px rgba(0, 212, 255, 0.1);
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--primary);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+
+
+    .head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: var(--secondary);
+      color: white;
+    }
+
+    .name h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .btn button {
+      margin-left: 10px;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+      background-color: var(--primary);
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .btn button:hover {
+      background-color: var(--secondary);
+    }
+
+
+    .btn button:active {
+      transform: translateY(0);
+    }
+    .main-content {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+    }
+    .text h1 {
+      font-size: 3em;
+      margin-bottom: 10px;
+      color: white;
+      text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+    }
+    .text p {
+      font-size: 1.2em;
+      max-width: 600px;
+      margin-bottom: 40px;
+      line-height: 1.6;
+      color: var(--text-color);
+    }
+    .speedometer-container {
+      position: relative;
+      width: 600px;
+      height: 300px;
+      border-top-left-radius: 300px;
+      border-top-right-radius: 300px;
+      background: linear-gradient(to top, #1a2a3e, #2a3e52);
+      border: 14px solid var(--accent-border);
+      box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      padding-bottom: 30px;
+      margin-top: 40px;
+    }
+    .speedometer-inner-circle {
+      position: absolute;
+      width: 560px;
+      height: 280px;
+      border-top-left-radius: 280px;
+      border-top-right-radius: 280px;
+      background: var(--primary);
+      top: 14px;
+      left: 14px;
+      z-index: 1;
+      overflow: hidden;
+    }
+    .markers, .labels {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      bottom: 0;
+      left: 0;
+      z-index: 3;
+      pointer-events: none;
+    }
+    .labels {
+      z-index: 5;
+      pointer-events: none;
+    }
+    .marker {
+      position: absolute;
+      width: 3px;
+      height: 22px;
+      background: #aaa;
+      transform-origin: bottom center;
+      bottom: 0;
+      left: 50%;
+    }
+    .marker.major {
+      background: #fff;
+      height: 34px;
+      box-shadow: 0 0 8px rgba(255,255,255,0.5);
+    }
+    .label {
+      position: absolute;
+      color: #fff;
+      font-size: 20px;
+      font-weight: bold;
+      transform-origin: center;
+      text-shadow: 0 2px 6px #000a;
+      background: rgba(0,0,0,0.3);
+      padding: 2px 8px;
+      border-radius: 8px;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .needle {
+      position: absolute;
+      width: 10px;
+      height: 230px;
+      background: var(--needle-color);
+      border-radius: 5px 5px 0 0;
+      top: 60px;
+      left: calc(50% - 5px);
+      transform-origin: bottom center;
+      transform: rotate(-90deg);
+      transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+      z-index: 4;
+      box-shadow: 0 0 20px rgba(255, 0, 119, 0.8);
+    }
+    .center-pivot {
+      position: absolute;
+      width: 44px;
+      height: 44px;
+      background: var(--accent-border);
+      border-radius: 50%;
+      bottom: 18px;
+      left: calc(50% - 22px);
+      z-index: 5;
+      border: 6px solid #fff;
+      box-shadow: 0 0 25px rgba(0, 212, 255, 0.9);
+    }
+    .speed-display {
+      position: absolute;
+      bottom: -80px;
+      width: 100%;
+      text-align: center;
+      color: #fff;
+      z-index: 6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .speed-value {
+      font-size: 5em;
+      font-weight: bold;
+      color: var(--speed-value-color);
+      text-shadow: 0 0 25px rgba(0, 255, 204, 0.9);
+      margin-bottom: -10px;
+    }
+    .speed-unit {
+      font-size: 2em;
+      color: #aaa;
+    }
+    .info {
+      margin: 110px auto 0 auto;
+      max-width: 520px;
+      background: var(--info-bg);
+      border: 2px solid var(--info-border);
+      border-radius: 18px;
+      box-shadow: var(--info-shadow);
+      padding: 36px 32px 24px 32px;
+      text-align: center;
+      font-size: 1.22em;
+      color: var(--text-color);
+      line-height: 1.7;
+      position: relative;
+      transition: box-shadow 0.2s ease;
+    }
+    .info:hover {
+        box-shadow: 0 4px 30px rgba(0, 212, 255, 0.2);
+    }
+    .info .result-label {
+      font-size: 1.1em;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .info .result-main {
+      font-size: 2.6em;
+      font-weight: bold;
+      color: #00ffcc;
+      margin: 10px 0 8px 0;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .info .result-main .fa-bolt {
+      color: #ffd700;
+      font-size: 1.1em;
+      filter: drop-shadow(0 0 5px #ffd70099);
+    }
+    .info .result-extra {
+      font-size: 0.95em;
+      color: #8ff0ff;
+      margin-bottom: 2px;
+      font-family: 'Consolas', 'Menlo', 'monospace';
+      letter-spacing: 0.3px;
+    }
+    .info .result-note {
+      font-size: 0.92em;
+      color: #ccc;
+      margin-top: 10px;
+    }
+    .info .fa-circle-info, .info .fa-triangle-exclamation {
+        color: var(--info-border);
+        margin-right: 6px;
+    }
+    .info .fa-triangle-exclamation {
+        color: #ff3b3b;
+    }
+    @media (max-width: 800px) {
+      .head {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 10px 15px;
+      }
+      .btn {
+        margin-top: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .btn button {
+        margin: 5px;
+        padding: 8px 12px;
+        font-size: 0.9em;
+      }
+      .name h1 {
+        font-size: 22px;
+      }
+      .text h1 {
+        font-size: 2em;
+      }
+      .text p {
+        font-size: 1em;
+        margin-bottom: 20px;
+      }
+      .speedometer-container {
+        width: 360px;
+        height: 180px;
+        border-top-left-radius: 180px;
+        border-top-right-radius: 180px;
+        border-width: 7px;
+        padding-bottom: 12px;
+      }
+      .speedometer-inner-circle {
+        width: 336px;
+        height: 168px;
+        border-top-left-radius: 168px;
+        border-top-right-radius: 168px;
+        top: 7px;
+        left: 7px;
+      }
+      .needle {
+        height: 120px;
+        top: 32px;
+        width: 5px;
+      }
+      .center-pivot {
+        width: 28px;
+        height: 28px;
+        left: calc(50% - 14px);
+        bottom: 10px;
+        border-width: 3px;
+      }
+      .speed-display {
+        bottom: -45px;
+      }
+      .speed-value {
+        font-size: 3em;
+      }
+      .speed-unit {
+        font-size: 1.2em;
+      }
+      .label {
+        font-size: 12px;
+      }
+      .marker {
+        height: 14px;
+        width: 2px;
+      }
+      .marker.major {
+        height: 22px;
+      }
+      .labels .label {
+        font-size: 12px;
+      }
+      .info {
+        font-size: 1em;
+        padding: 20px;
+        margin-top: 60px;
+      }
+      .info .result-main {
+        font-size: 2em;
+      }
+      .info .result-label {
+        font-size: 1em;
+      }
+      .info .result-extra {
+        font-size: 0.85em;
+      }
+    }
+    @media (max-width: 480px) {
+      .text h1 {
+        font-size: 1.8em;
+      }
+      .text p {
+        font-size: 0.9em;
+      }
+      .speedometer-container {
+        width: 280px;
+        height: 140px;
+        border-top-left-radius: 140px;
+        border-top-right-radius: 140px;
+        border-width: 6px;
+        padding-bottom: 10px;
+      }
+      .speedometer-inner-circle {
+        width: 268px;
+        height: 134px;
+        border-top-left-radius: 134px;
+        border-top-right-radius: 134px;
+        top: 6px;
+        left: 6px;
+      }
+      .needle {
+        height: 90px;
+        top: 24px;
+        width: 4px;
+      }
+      .center-pivot {
+        width: 20px;
+        height: 20px;
+        left: calc(50% - 10px);
+        bottom: 8px;
+        border-width: 2px;
+      }
+      .speed-display {
+        bottom: -35px;
+      }
+      .speed-value {
+        font-size: 2.5em;
+      }
+      .speed-unit {
+        font-size: 1em;
+      }
+      .label {
+        font-size: 10px;
+      }
+      .marker {
+        height: 10px;
+        width: 1.5px;
+      }
+      .marker.major {
+        height: 16px;
+      }
+      .info {
+        margin-top: 40px;
+        font-size: 0.9em;
+        padding: 15px;
+      }
+      .info .result-main {
+        font-size: 1.8em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="head">
+    <div class="name">
+      <h1>NetSpeed</h1>
+    </div>
+    <div class="btn">
+      <button type="button"><i class="fas fa-home"></i> Home</button>
+      <button id="changeButton" type="button"><i class="fas fa-redo"></i> Test Again</button>
+      <a href="https://github.com/shivamshrma09" target="_blank" style="text-decoration: none;">
+        <button type="button"><i class="fab fa-github"></i> Github</button>
+      </a>
+      <a href="https://www.linkedin.com/in/shivam-kumar-321810324?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank" style="text-decoration: none;">
+        <button type="button"><i class="fab fa-linkedin"></i> LinkedIn</button>
+      </a>
+    </div>
+  </div>
+  <div class="main-content">
+    <div class="text">
+      <h1>Test Your Internet Speed</h1>
+      <p>Click "Test Again" to measure your current download speed and see how fast your internet connection is!</p>
+    </div>
+    <div class="speedometer-container">
+      <div class="speedometer-inner-circle">
+        <div class="markers" id="markers"></div>
+        <div class="labels" id="labels"></div>
+      </div>
+      <div class="needle" id="needle"></div>
+      <div class="center-pivot"></div>
+      <div class="speed-display">
+        <div class="speed-value" id="speedValue">0</div>
+        <div class="speed-unit">Mbps</div>
+      </div>
+    </div>
+    <div class="info" id="infoText">
+      <span class="result-label"><i class="fa-solid fa-circle-info"></i> Initializing speed test...</span>
+    </div>
+  </div>
+  <script>
+    let time_start, end_time;
+    let speedometerMax = 200;
+    function setSpeedometerScale(maxValue) {
+      const markersContainer = document.getElementById('markers');
+      const labelsContainer = document.getElementById('labels');
+      markersContainer.innerHTML = '';
+      labelsContainer.innerHTML = '';
+      const speedoInner = document.querySelector('.speedometer-inner-circle');
+      const speedoInnerWidth = speedoInner.offsetWidth;
+      const speedoInnerHeight = speedoInner.offsetHeight;
+      const centerX = speedoInnerWidth / 2;
+      const centerY = speedoInnerHeight;
+      const radius = speedoInnerHeight - 10;
+      let step = 20;
+      if (maxValue <= 50) step = 10;
+      else if (maxValue <= 100) step = 20;
+      else if (maxValue <= 200) step = 20;
+      else if (maxValue <= 500) step = 50;
+      else step = 100;
+      const totalSteps = Math.floor(maxValue / step);
+      for (let i = 0; i <= totalSteps; i++) {
+        const value = i * step;
+        const percent = value / maxValue;
+        const angle = -90 + percent * 180;
+        const marker = document.createElement('div');
+        marker.className = 'marker' + (i % (2 * (20 / step)) === 0 ? ' major' : '');
+        marker.style.transform = `translateX(-50%) rotate(${angle}deg) translateY(-${radius}px)`;
+        markersContainer.appendChild(marker);
+        const label = document.createElement('div');
+        label.className = 'label';
+        label.textContent = value;
+        const angleRad = (angle + 90) * (Math.PI / 180);
+        const labelRadius = radius + (marker.classList.contains('major') ? 25 : 18);
+        const labelX = centerX + labelRadius * Math.cos(angleRad);
+        const labelY = centerY + labelRadius * Math.sin(angleRad);
+        label.style.left = `${labelX}px`;
+        label.style.top = `${labelY}px`;
+        label.style.transform = `translate(-50%, -50%)`;
+        labelsContainer.appendChild(label);
+      }
+    }
+    function updateSpeed(speed, maxValue) {
+      const needle = document.getElementById('needle');
+      const speedValueElement = document.getElementById('speedValue');
+      const displaySpeed = Math.min(Math.max(0, speed), maxValue);
+      const angle = (displaySpeed / maxValue) * 180 - 90;
+      needle.style.transform = `rotate(${angle}deg)`;
+      speedValueElement.textContent = displaySpeed.toFixed(2);
+    }
+    function initiateSpeedTest() {
+      const userImageLink = "https://media.geeksforgeeks.org/wp-content/cdn-uploads/20200714180638/CIP_Launch-banner.png";
+      const downloadSize = 5616998;
+      const infoTextElement = document.getElementById('infoText');
+      infoTextElement.innerHTML = `<span class="result-label"><i class="fa-solid fa-circle-info"></i> Testing speed... please wait.</span>`;
+      updateSpeed(0, speedometerMax);
+      let downloadImgSrc = new Image();
+      downloadImgSrc.onload = function() {
+        end_time = new Date().getTime();
+        displaySpeedResults(downloadSize);
+      };
+      downloadImgSrc.onerror = function() {
+        infoTextElement.innerHTML = `<span class="result-label" style="color:#ff3b3b;"><i class="fa-solid fa-triangle-exclamation"></i> Error: Could not load test image. Please try again.</span>`;
+        updateSpeed(0, speedometerMax);
+      };
+      time_start = new Date().getTime();
+      downloadImgSrc.src = userImageLink + '?_=' + new Date().getTime();
+    }
+    function displaySpeedResults(downloadSize) {
+      const infoTextElement = document.getElementById('infoText');
+      let timeDuration = (end_time - time_start) / 1000;
+      if (timeDuration <= 0) timeDuration = 0.1;
+      let loadedBits = downloadSize * 8;
+      let bps = (loadedBits / timeDuration);
+      let speedInKbps = (bps / 1024);
+      let speedInMbps = (speedInKbps / 1024);
+      let newMax = 200;
+      if (speedInMbps < 10) newMax = 20;
+      else if (speedInMbps < 20) newMax = 40;
+      else if (speedInMbps < 40) newMax = 60;
+      else if (speedInMbps < 60) newMax = 80;
+      else if (speedInMbps < 80) newMax = 100;
+      else if (speedInMbps < 100) newMax = 120;
+      else if (speedInMbps < 150) newMax = 200;
+      else if (speedInMbps < 200) newMax = 250;
+      else if (speedInMbps < 300) newMax = 400;
+      else if (speedInMbps < 500) newMax = 600;
+      else newMax = Math.ceil(speedInMbps / 100) * 100 + 100;
+      speedometerMax = newMax;
+      setSpeedometerScale(speedometerMax);
+      updateSpeed(speedInMbps, speedometerMax);
+      let emoji = "⚡";
+      let quality = "Excellent";
+      if (speedInMbps < 2) { emoji = "🐢"; quality = "Very Slow"; }
+      else if (speedInMbps < 5) { emoji = "🚶"; quality = "Slow"; }
+      else if (speedInMbps < 15) { emoji = "🚗"; quality = "Average"; }
+      else if (speedInMbps < 40) { emoji = "🚀"; quality = "Fast"; }
+      else if (speedInMbps < 100) { emoji = "🔥"; quality = "Very Fast"; }
+      infoTextElement.innerHTML = `
+        <div class="result-label"><i class="fa-solid fa-circle-info"></i> Your internet connection speed is:</div>
+        <div class="result-main"><span>${emoji}</span> ${speedInMbps.toFixed(2)} <span style="font-size:0.6em;">Mbps</span></div>
+        <div class="result-extra">(${speedInKbps.toFixed(2)} Kbps | ${bps.toFixed(2)} bps)</div>
+        <div class="result-label" style="margin-top:8px;">Quality: <strong>${quality}</strong></div>
+        <div class="result-note">(Based on downloading a ${(downloadSize / (1024 * 1024)).toFixed(1)} MB image)</div>
+      `;
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      setSpeedometerScale(speedometerMax);
+      document.getElementById('changeButton').addEventListener('click', initiateSpeedTest);
+      initiateSpeedTest();
+    });
+  </script>
+</body>
+</html>
